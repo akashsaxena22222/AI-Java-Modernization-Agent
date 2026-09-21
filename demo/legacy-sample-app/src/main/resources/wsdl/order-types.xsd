@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+
+  Schema for the types exchanged by OrderService.wsdl. Imported rather than inlined,
+  so the fixture exercises FileKind.XSD alongside FileKind.WSDL.
+-->
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:tns="http://orders.acme.com/types"
+            targetNamespace="http://orders.acme.com/types"
+            elementFormDefault="qualified">
+
+    <xsd:complexType name="Order">
+        <xsd:sequence>
+            <xsd:element name="id" type="xsd:long" minOccurs="0"/>
+            <xsd:element name="customerId" type="xsd:string"/>
+            <!-- xsd:string for a date, parsed with the shared SimpleDateFormat in DateUtil. -->
+            <xsd:element name="orderDate" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="status" type="tns:OrderStatus"/>
+            <!-- xsd:double for money. -->
+            <xsd:element name="totalAmount" type="xsd:double"/>
+            <xsd:element name="currency" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="line" type="tns:OrderLine"
+                         minOccurs="0" maxOccurs="unbounded"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="OrderLine">
+        <xsd:sequence>
+            <xsd:element name="sku" type="xsd:string"/>
+            <xsd:element name="description" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="quantity" type="xsd:int"/>
+            <xsd:element name="unitPrice" type="xsd:double"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <!-- Status values duplicated as plain strings in Order.java rather than an enum. -->
+    <xsd:simpleType name="OrderStatus">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="NEW"/>
+            <xsd:enumeration value="SUBMITTED"/>
+            <xsd:enumeration value="PICKING"/>
+            <xsd:enumeration value="SHIPPED"/>
+            <xsd:enumeration value="CANCELLED"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>

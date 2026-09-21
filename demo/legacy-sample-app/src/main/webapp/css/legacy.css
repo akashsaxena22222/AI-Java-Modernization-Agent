@@ -1,0 +1,38 @@
+/*
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+  The stylesheet referenced by order-list.jsp. Classified as FileKind.OTHER:
+  inventoried and counted, but nothing in Phase 1 interprets it.
+*/
+
+body {
+    font-family: Verdana, Arial, sans-serif;
+    font-size: 11px;
+    background-color: #FFFFFF;
+    margin: 8px;
+}
+
+h1 {
+    font-size: 16px;
+    border-bottom: 1px solid #CCCCCC;
+}
+
+table {
+    border-collapse: collapse;
+    font-size: 11px;
+}
+
+th {
+    background-color: #CCCCCC;
+    text-align: left;
+    padding: 4px;
+}
+
+td {
+    padding: 4px;
+    border: 1px solid #DDDDDD;
+}
+
+/* Layout by table, spacing by non-breaking space. */
+.spacer {
+    width: 8px;
+}

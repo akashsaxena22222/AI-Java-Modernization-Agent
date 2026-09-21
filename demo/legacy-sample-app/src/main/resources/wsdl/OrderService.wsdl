@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+
+  WSDL 1.1 / SOAP 1.1 contract for the four operations declared in
+  OrderService.java. This is the artifact a SOAP-to-REST analyzer would read to
+  propose concrete resource mappings (ARCHITECTURE.md section 15).
+-->
+<definitions name="OrderService"
+             targetNamespace="http://orders.acme.com/"
+             xmlns="http://schemas.xmlsoap.org/wsdl/"
+             xmlns:tns="http://orders.acme.com/"
+             xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+             xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+             xmlns:types="http://orders.acme.com/types">
+
+    <types>
+        <xsd:schema targetNamespace="http://orders.acme.com/">
+            <xsd:import namespace="http://orders.acme.com/types"
+                        schemaLocation="order-types.xsd"/>
+
+            <xsd:element name="getOrder">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="orderId" type="xsd:long"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="getOrderResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="order" type="types:Order" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="findOrdersByCustomer">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="customerId" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="findOrdersByCustomerResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <!-- Unbounded and unpaged: this operation has timed out in production. -->
+                        <xsd:element name="order" type="types:Order"
+                                     minOccurs="0" maxOccurs="unbounded"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="submitOrder">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="order" type="types:Order"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="submitOrderResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="orderId" type="xsd:long"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="cancelOrder">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="orderId" type="xsd:long"/>
+                        <xsd:element name="reason" type="xsd:string" minOccurs="0"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+            <xsd:element name="cancelOrderResponse">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="cancelled" type="xsd:boolean"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+
+            <xsd:element name="OrderFault">
+                <xsd:complexType>
+                    <xsd:sequence>
+                        <xsd:element name="code" type="xsd:string"/>
+                        <xsd:element name="message" type="xsd:string"/>
+                    </xsd:sequence>
+                </xsd:complexType>
+            </xsd:element>
+        </xsd:schema>
+    </types>
+
+    <message name="getOrder">
+        <part name="parameters" element="tns:getOrder"/>
+    </message>
+    <message name="getOrderResponse">
+        <part name="parameters" element="tns:getOrderResponse"/>
+    </message>
+    <message name="findOrdersByCustomer">
+        <part name="parameters" element="tns:findOrdersByCustomer"/>
+    </message>
+    <message name="findOrdersByCustomerResponse">
+        <part name="parameters" element="tns:findOrdersByCustomerResponse"/>
+    </message>
+    <message name="submitOrder">
+        <part name="parameters" element="tns:submitOrder"/>
+    </message>
+    <message name="submitOrderResponse">
+        <part name="parameters" element="tns:submitOrderResponse"/>
+    </message>
+    <message name="cancelOrder">
+        <part name="parameters" element="tns:cancelOrder"/>
+    </message>
+    <message name="cancelOrderResponse">
+        <part name="parameters" element="tns:cancelOrderResponse"/>
+    </message>
+    <message name="OrderFault">
+        <part name="fault" element="tns:OrderFault"/>
+    </message>
+
+    <portType name="OrderServicePort">
+        <!-- GET /orders/{orderId} -->
+        <operation name="getOrder">
+            <input message="tns:getOrder"/>
+            <output message="tns:getOrderResponse"/>
+            <fault name="OrderFault" message="tns:OrderFault"/>
+        </operation>
+        <!-- GET /orders?customerId={customerId} -->
+        <operation name="findOrdersByCustomer">
+            <input message="tns:findOrdersByCustomer"/>
+            <output message="tns:findOrdersByCustomerResponse"/>
+        </operation>
+        <!-- POST /orders -->
+        <operation name="submitOrder">
+            <input message="tns:submitOrder"/>
+            <output message="tns:submitOrderResponse"/>
+            <fault name="OrderFault" message="tns:OrderFault"/>
+        </operation>
+        <!-- POST /orders/{orderId}/cancellation -->
+        <operation name="cancelOrder">
+            <input message="tns:cancelOrder"/>
+            <output message="tns:cancelOrderResponse"/>
+            <fault name="OrderFault" message="tns:OrderFault"/>
+        </operation>
+    </portType>
+
+    <binding name="OrderServicePortBinding" type="tns:OrderServicePort">
+        <!-- rpc/encoded was already discouraged when this was written. -->
+        <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+        <operation name="getOrder">
+            <soap:operation soapAction="http://orders.acme.com/getOrder"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="OrderFault"><soap:fault name="OrderFault" use="literal"/></fault>
+        </operation>
+        <operation name="findOrdersByCustomer">
+            <soap:operation soapAction="http://orders.acme.com/findOrdersByCustomer"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+        </operation>
+        <operation name="submitOrder">
+            <soap:operation soapAction="http://orders.acme.com/submitOrder"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="OrderFault"><soap:fault name="OrderFault" use="literal"/></fault>
+        </operation>
+        <operation name="cancelOrder">
+            <soap:operation soapAction="http://orders.acme.com/cancelOrder"/>
+            <input><soap:body use="literal"/></input>
+            <output><soap:body use="literal"/></output>
+            <fault name="OrderFault"><soap:fault name="OrderFault" use="literal"/></fault>
+        </operation>
+    </binding>
+
+    <service name="OrderService">
+        <port name="OrderServicePort" binding="tns:OrderServicePortBinding">
+            <!-- Hardcoded, non-TLS endpoint address baked into the contract. -->
+            <soap:address location="http://orders.acme.com/services/OrderService"/>
+        </port>
+    </service>
+
+</definitions>

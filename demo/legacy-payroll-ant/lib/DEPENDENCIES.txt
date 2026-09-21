@@ -1,0 +1,33 @@
+Acme Payroll - lib/ contents
+============================
+
+DELIBERATELY LEGACY. See ../README.md.
+
+The real project checks these jars into version control in this directory. They are
+NOT committed to this repository: the analyzer's own .gitignore excludes *.jar, and
+shipping binaries in a demo fixture would be worse than describing them.
+
+That absence is itself faithful to the problem being demonstrated. There is no
+pom.xml, no build.gradle, no lock file and no manifest anywhere in this project that
+records these versions - this text file, maintained by hand and last updated in 2014,
+is the only inventory that exists. Several entries are already known to be wrong.
+
+  struts-1.3.10.jar                 Struts 1. End of life since 2013.
+  struts-taglib-1.3.10.jar
+  commons-beanutils-1.7.0.jar       Known deserialization gadget in 1.7.
+  commons-collections-3.2.1.jar     The 2015 gadget chain. Fixed in 3.2.2.
+  commons-digester-1.8.jar
+  commons-logging-1.1.jar
+  commons-lang-2.1.jar
+  commons-fileupload-1.2.1.jar      Multiple remote code execution advisories.
+  log4j-1.2.14.jar                  End of life since 2015.
+  ojdbc14.jar                       Oracle 10g driver, compiled for Java 1.4.
+  junit-3.8.1.jar                   Test scope, but on the runtime classpath too.
+  xerces-2.6.2.jar
+  xml-apis-1.0.b2.jar               Shadows the JDK's own XML classes.
+  jaxrpc.jar                        Unknown version. Copied from a JBoss install.
+  activation.jar                    Unknown version.
+  mail.jar                          Unknown version.
+
+Jars with "unknown version" above were copied off a developer machine in 2009 and
+have no version information in their manifests.

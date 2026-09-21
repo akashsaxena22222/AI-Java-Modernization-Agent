@@ -1,0 +1,84 @@
+spring:
+  application:
+    name: ai-java-modernization-agent
+  jackson:
+    # Report JSON is consumed by humans in a demo and by a browser UI in Phase 2,
+    # so pretty-print it and drop null fields.
+    #
+    # NOTE: Boot 4 ships Jackson 3 (tools.jackson.*). Do not add
+    # 'write-dates-as-timestamps' here - that SerializationFeature no longer exists in
+    # Jackson 3, and ISO-8601 output is the new default, so it is also unnecessary.
+    default-property-inclusion: non_null
+    serialization:
+      indent-output: true
+
+server:
+  port: 8081
+  error:
+    include-message: always
+
+modernizer:
+  analyzer-version: 0.1.0
+
+  # ---------------------------------------------------------------------------
+  # Scanner limits and safety boundary (ARCHITECTURE.md section 8)
+  # ---------------------------------------------------------------------------
+  scan:
+    # A scan target must resolve underneath one of these roots after canonicalization.
+    # An EMPTY list refuses every scan - we fail closed, because the path arrives over HTTP.
+    # Default './demo' makes the bundled fixture work out of the box while refusing
+    # everything else on the machine. Add your own absolute roots to analyze real projects:
+    #   allowed-roots:
+    #     - ./demo
+    #     - D:/work/legacy-projects
+    allowed-roots:
+      - ./demo
+    excluded-directories:
+      - target
+      - build
+      - out
+      - bin
+      - .git
+      - .idea
+      - node_modules
+      - .mvn
+    max-depth: 25
+    max-files: 20000
+    max-file-size: 1MB
+    max-total-bytes: 200MB
+    timeout: 60s
+
+  # ---------------------------------------------------------------------------
+  # LLM provider (ARCHITECTURE.md sections 9 and 10)
+  # ---------------------------------------------------------------------------
+  ai:
+    # EGRESS GATE. Off by default: no project-derived data leaves this machine unless you
+    # switch this on. Static analysis (Step 3) works fully with this set to false.
+    enabled: false
+
+    # 'anthropic' | 'mock'. 'mock' needs no API key and returns a canned assessment,
+    # which is what keeps Steps 0-4 demoable offline.
+    provider: anthropic
+
+    # Switching Anthropic models is this one line - no code change.
+    # Alternative: claude-sonnet-5 (cheaper and faster, weaker on roadmap/effort reasoning).
+    model: claude-opus-5
+
+    # Portable hints. Each provider adapter maps these to its own mechanism.
+    reasoning-level: HIGH
+    cache-system-prompt: true
+
+    # Payload budget. Exceeding max-input-tokens degrades the payload visibly and sets
+    # meta.truncated in the report - it never truncates silently.
+    max-input-tokens: 150000
+    max-output-tokens: 16000
+    max-evidence-snippets: 40
+    max-snippet-chars: 200
+    timeout: 120s
+
+    # NOTE: there is no api-key property here, by design. The credential is read only from
+    # the ANTHROPIC_API_KEY environment variable so it cannot be committed or logged.
+
+logging:
+  level:
+    com.company.modernizer: INFO

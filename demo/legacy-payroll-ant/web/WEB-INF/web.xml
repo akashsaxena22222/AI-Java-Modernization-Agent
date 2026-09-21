@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See ../../README.md.
+  Servlet 2.3 DTD, Struts 1 ActionServlet, security by <security-constraint>.
+-->
+<!DOCTYPE web-app PUBLIC "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
+        "http://java.sun.com/dtd/web-app_2_3.dtd">
+<web-app>
+
+    <display-name>Acme Payroll</display-name>
+
+    <!-- The Struts 1 front controller. Everything routes through here. -->
+    <servlet>
+        <servlet-name>action</servlet-name>
+        <servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+        <init-param>
+            <param-name>config</param-name>
+            <param-value>/WEB-INF/struts-config.xml</param-value>
+        </init-param>
+        <init-param>
+            <param-name>debug</param-name>
+            <!-- Debug logging left on in production. -->
+            <param-value>3</param-value>
+        </init-param>
+        <init-param>
+            <param-name>detail</param-name>
+            <param-value>2</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>action</servlet-name>
+        <url-pattern>*.do</url-pattern>
+    </servlet-mapping>
+
+    <!-- Container-managed security, configured against the app server's realm. -->
+    <security-constraint>
+        <web-resource-collection>
+            <web-resource-name>Payroll</web-resource-name>
+            <url-pattern>/employee.do</url-pattern>
+            <url-pattern>/payroll.do</url-pattern>
+        </web-resource-collection>
+        <auth-constraint>
+            <role-name>payroll</role-name>
+        </auth-constraint>
+        <!-- No <user-data-constraint>, so credentials travel over plain HTTP. -->
+    </security-constraint>
+
+    <login-config>
+        <auth-method>BASIC</auth-method>
+        <realm-name>PayrollRealm</realm-name>
+    </login-config>
+
+    <security-role>
+        <role-name>payroll</role-name>
+    </security-role>
+
+    <!-- The reports servlet is deliberately outside the security constraint. -->
+    <servlet>
+        <servlet-name>reports</servlet-name>
+        <servlet-class>com.acme.payroll.action.ReportServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>reports</servlet-name>
+        <url-pattern>/reports/*</url-pattern>
+    </servlet-mapping>
+
+    <!-- EJB reference resolved by the container at deploy time. -->
+    <ejb-ref>
+        <ejb-ref-name>ejb/PayrollSession</ejb-ref-name>
+        <ejb-ref-type>Session</ejb-ref-type>
+        <home>com.acme.payroll.ejb.PayrollSessionHome</home>
+        <remote>com.acme.payroll.ejb.PayrollSession</remote>
+    </ejb-ref>
+
+    <resource-ref>
+        <res-ref-name>jdbc/PayrollDS</res-ref-name>
+        <res-type>javax.sql.DataSource</res-type>
+        <res-auth>Container</res-auth>
+    </resource-ref>
+
+    <session-config>
+        <session-timeout>120</session-timeout>
+    </session-config>
+
+    <welcome-file-list>
+        <welcome-file>index.jsp</welcome-file>
+    </welcome-file-list>
+
+    <taglib>
+        <taglib-uri>/WEB-INF/struts-html.tld</taglib-uri>
+        <taglib-location>/WEB-INF/struts-html.tld</taglib-location>
+    </taglib>
+
+</web-app>

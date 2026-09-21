@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+
+  Every bean is wired by hand in XML. There is no component scanning and no
+  annotation-driven configuration, which is what makes this file 200-odd lines of
+  maintenance in the real system it is modelled on.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/tx
+                           http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
+
+    <bean id="propertyConfigurer"
+          class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:application.properties"/>
+    </bean>
+
+    <!--
+      DriverManagerDataSource opens a new physical connection per request: no pooling
+      at all. Credentials come from application.properties, in plaintext.
+    -->
+    <bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="${db.driver}"/>
+        <property name="url" value="${db.url}"/>
+        <property name="username" value="${db.username}"/>
+        <property name="password" value="${db.password}"/>
+    </bean>
+
+    <!-- Hibernate 4 SessionFactory over the pre-jakarta javax.persistence namespace. -->
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="packagesToScan" value="com.acme.orders"/>
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop>
+                <!-- Schema is mutated at boot. In production. -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+                <prop key="hibernate.show_sql">true</prop>
+                <prop key="hibernate.cache.use_second_level_cache">false</prop>
+            </props>
+        </property>
+    </bean>
+
+    <bean id="transactionManager"
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <bean id="orderDao" class="com.acme.orders.OrderDao">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+
+    <bean id="orderService" class="com.acme.orders.OrderServiceImpl">
+        <property name="orderDao" ref="orderDao"/>
+    </bean>
+
+    <!-- The SOAP endpoint, published from XML. -->
+    <bean id="orderSoapEndpoint" class="javax.xml.ws.Endpoint" factory-method="create">
+        <constructor-arg ref="orderService"/>
+    </bean>
+
+    <!-- Mail sender with the SMTP password inlined from properties. -->
+    <bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+        <property name="host" value="${smtp.host}"/>
+        <property name="username" value="${smtp.username}"/>
+        <property name="password" value="${smtp.password}"/>
+    </bean>
+
+</beans>

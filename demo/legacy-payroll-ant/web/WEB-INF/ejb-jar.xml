@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See ../../README.md.
+  EJB 2.0 deployment descriptor. The bean's wiring lives here, not in the code.
+-->
+<!DOCTYPE ejb-jar PUBLIC
+        "-//Sun Microsystems, Inc.//DTD Enterprise JavaBeans 2.0//EN"
+        "http://java.sun.com/dtd/ejb-jar_2_0.dtd">
+<ejb-jar>
+
+    <display-name>AcmePayrollEJB</display-name>
+
+    <enterprise-beans>
+        <session>
+            <ejb-name>PayrollSession</ejb-name>
+            <home>com.acme.payroll.ejb.PayrollSessionHome</home>
+            <remote>com.acme.payroll.ejb.PayrollSession</remote>
+            <ejb-class>com.acme.payroll.ejb.PayrollSessionBean</ejb-class>
+            <session-type>Stateless</session-type>
+            <!-- Bean-managed transactions were selected, then never implemented. -->
+            <transaction-type>Container</transaction-type>
+
+            <resource-ref>
+                <res-ref-name>jdbc/PayrollDS</res-ref-name>
+                <res-type>javax.sql.DataSource</res-type>
+                <res-auth>Container</res-auth>
+            </resource-ref>
+        </session>
+    </enterprise-beans>
+
+    <assembly-descriptor>
+        <container-transaction>
+            <method>
+                <ejb-name>PayrollSession</ejb-name>
+                <method-name>*</method-name>
+            </method>
+            <!--
+              Supports, not Required. commitPayrollRun therefore runs with no transaction
+              at all when called from a servlet thread, which is how a partially written
+              payroll run becomes possible.
+            -->
+            <trans-attribute>Supports</trans-attribute>
+        </container-transaction>
+    </assembly-descriptor>
+
+</ejb-jar>

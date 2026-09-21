@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+
+  Spring Security 3.2 namespace configuration. Every choice below is one that the
+  current framework either renamed, removed, or refuses to do at all.
+-->
+<beans:beans xmlns="http://www.springframework.org/schema/security"
+             xmlns:beans="http://www.springframework.org/schema/beans"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://www.springframework.org/schema/beans
+                                 http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                                 http://www.springframework.org/schema/security
+                                 http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+    <!-- The SOAP endpoint is wide open: no authentication on /services/**. -->
+    <http pattern="/services/**" security="none"/>
+    <http pattern="/images/**" security="none"/>
+
+    <http auto-config="true" use-expressions="true">
+        <!--
+          CSRF protection is off. It was opt-in in 3.2 and nobody opted in; it became
+          the default in Spring Security 4, which is part of why this upgrade stalled.
+        -->
+        <csrf disabled="true"/>
+
+        <intercept-url pattern="/orders/cancel" access="hasRole('ROLE_USER')"/>
+        <intercept-url pattern="/orders/**" access="hasRole('ROLE_USER')"/>
+        <intercept-url pattern="/admin/**" access="hasRole('ROLE_ADMIN')"/>
+        <!-- Everything not matched above is public, by omission rather than intent. -->
+        <intercept-url pattern="/**" access="permitAll"/>
+
+        <form-login login-page="/login.jsp"
+                    default-target-url="/orders"
+                    authentication-failure-url="/login.jsp?error=1"/>
+
+        <!-- HTTP Basic accepted alongside form login, over plain HTTP. -->
+        <http-basic/>
+
+        <!-- Static remember-me key, committed to version control since 2011. -->
+        <remember-me key="acmeOrderServiceRememberMeKey" token-validity-seconds="2592000"/>
+
+        <logout logout-url="/logout" invalidate-session="true"/>
+
+        <!-- No <session-management> block, so session fixation protection is left at the default. -->
+    </http>
+
+    <authentication-manager>
+        <authentication-provider>
+            <!-- MD5, unsalted. See also PasswordUtil.java. -->
+            <password-encoder hash="md5"/>
+            <jdbc-user-service data-source-ref="dataSource"
+                               users-by-username-query="select username, password, enabled from app_user where username = ?"
+                               authorities-by-username-query="select username, role from app_user_role where username = ?"/>
+        </authentication-provider>
+    </authentication-manager>
+
+</beans:beans>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.1.1</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.company</groupId>
+    <artifactId>modernizer</artifactId>
+    <version>0.1.0-SNAPSHOT</version>
+    <name>ai-java-modernization-agent</name>
+    <description>Analyzes a legacy Java project and generates an AI-assisted modernization assessment</description>
+
+    <properties>
+        <java.version>21</java.version>
+    </properties>
+
+    <dependencies>
+        <!-- REST API + embedded Tomcat. In Boot 4 this is 'webmvc', not 'web'. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc</artifactId>
+        </dependency>
+
+        <!-- @Valid on request DTOs (Step 2 onward) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!--
+          Real pom.xml parsing (Step 3). Chosen over hand-rolled XML because a POM's structure -
+          <dependencyManagement>, <properties> placeholders, plugin configuration - degrades badly
+          under regex, and dependency analysis is the highest-value detector we have.
+
+          Scope note: this gives a faithful object model of ONE pom file. Parent inheritance and
+          cross-module interpolation need Maven's full ModelBuilder plus a resolver, which is the
+          whole Maven runtime. BuildFileParser therefore interpolates against each pom's own
+          <properties> and leaves a version null when only a parent could supply it - which is
+          reported as a finding rather than guessed at.
+        -->
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>3.9.9</version>
+        </dependency>
+
+        <!--
+          Still deliberately NOT declared - arrives at the step that first uses it (section 7):
+            com.anthropic:anthropic-java   -> Step 5 (Claude integration)
+        -->
+
+        <!-- JUnit 5 + AssertJ + MockMvc. Boot 4 splits the old starter-test per module. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!--
+                      Run from the repository root, not backend/. Relative scan allow-roots such as
+                      './demo' are resolved against the working directory, and the demo fixture
+                      lives at the repo root. Without this the default basedir would make
+                      './demo' mean 'backend/demo', which does not exist.
+                    -->
+                    <workingDirectory>${project.basedir}/..</workingDirectory>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!--
+                      Tests run from the repository root too, for the same reason and so that they
+                      agree with spring-boot:run above. Surefire otherwise forks in backend/, where
+                      the configured './demo' allow-root does not exist - the guard would then fail
+                      closed with ALLOWLIST_EMPTY and every scan test would be asserting against a
+                      path resolution that never happens in production.
+
+                      Aligning the two is deliberate: the alternative is overriding
+                      modernizer.scan.allowed-roots per test, which would hide the discrepancy
+                      rather than remove it.
+                    -->
+                    <workingDirectory>${project.basedir}/..</workingDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

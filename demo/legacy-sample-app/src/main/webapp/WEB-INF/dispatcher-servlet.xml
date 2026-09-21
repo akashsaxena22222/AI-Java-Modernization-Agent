@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See the README.md in this fixture.
+
+  Spring 4 MVC configuration for the dispatcher declared in web.xml. Hand-wired
+  view resolution onto JSPs, with no content negotiation and no REST support.
+-->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+                           http://www.springframework.org/schema/context
+                           http://www.springframework.org/schema/context/spring-context-3.0.xsd
+                           http://www.springframework.org/schema/mvc
+                           http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd">
+
+    <!-- The only component scanning in the application, and it covers just the web layer. -->
+    <context:component-scan base-package="com.acme.orders.web"/>
+
+    <mvc:annotation-driven/>
+
+    <!-- Server-rendered JSP views. There is no JSON representation of an order. -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <bean id="messageSource"
+          class="org.springframework.context.support.ResourceBundleMessageSource">
+        <property name="basename" value="messages"/>
+        <property name="defaultEncoding" value="ISO-8859-1"/>
+    </bean>
+
+    <mvc:resources mapping="/images/**" location="/images/"/>
+
+</beans>
