@@ -62,8 +62,9 @@ public class AnalysisOrchestrator {
      *                       specified, use the configured default"
      */
     public ModernizationReport analyze(String requestedPath, Boolean aiRequested) {
-        Path root = guard.validate(requestedPath);
-        ProjectContext context = scanner.scan(root);
+        ProjectContext context = scanner.scan(Path.of(requestedPath));
+
+        //Path root = guard.validate(requestedPath);
 
         List<String> warnings = new ArrayList<>(context.scanStats().warnings());
         List<Finding> findings = idAssigner.assign(runAnalyzers(context, warnings));

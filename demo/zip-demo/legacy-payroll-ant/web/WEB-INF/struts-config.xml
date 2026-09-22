@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See ../../README.md.
+  Struts 1 configuration. Routing, form binding and view selection, all in XML.
+-->
+<!DOCTYPE struts-config PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 1.3//EN"
+        "http://struts.apache.org/dtds/struts-config_1_3.dtd">
+<struts-config>
+
+    <form-beans>
+        <form-bean name="employeeForm" type="com.acme.payroll.form.EmployeeForm"/>
+        <!-- A DynaActionForm: fields declared in XML, so nothing is compile-checked. -->
+        <form-bean name="payrollForm" type="org.apache.struts.action.DynaActionForm">
+            <form-property name="period" type="java.lang.String"/>
+            <form-property name="approver" type="java.lang.String"/>
+            <form-property name="role" type="java.lang.String"/>
+        </form-bean>
+    </form-beans>
+
+    <global-forwards>
+        <forward name="failure" path="/error.jsp"/>
+        <forward name="login" path="/index.jsp"/>
+    </global-forwards>
+
+    <action-mappings>
+        <action path="/employee"
+                type="com.acme.payroll.action.EmployeeAction"
+                name="employeeForm"
+                scope="session"
+                validate="true"
+                input="/employee-edit.jsp">
+            <forward name="success" path="/employee-list.jsp"/>
+        </action>
+
+        <!--
+          validate="false" on the action that submits payroll, because the DynaActionForm
+          validation was "too noisy". The role check is done in the action, from a
+          request parameter.
+        -->
+        <action path="/payroll"
+                type="com.acme.payroll.action.PayrollSubmitAction"
+                name="payrollForm"
+                scope="request"
+                validate="false">
+            <forward name="success" path="/payroll-confirm.jsp"/>
+        </action>
+    </action-mappings>
+
+    <message-resources parameter="ApplicationResources"/>
+
+    <plug-in className="org.apache.struts.validator.ValidatorPlugIn">
+        <set-property property="pathnames"
+                      value="/WEB-INF/validator-rules.xml,/WEB-INF/validation.xml"/>
+    </plug-in>
+
+</struts-config>

@@ -11,7 +11,10 @@ spring:
     default-property-inclusion: non_null
     serialization:
       indent-output: true
-
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 60MB
 server:
   port: 8081
   error:
@@ -33,6 +36,7 @@ modernizer:
     #     - D:/work/legacy-projects
     allowed-roots:
       - ./demo
+      - C:/Users/Lenovo/AppData/Local/Temp
     excluded-directories:
       - target
       - build

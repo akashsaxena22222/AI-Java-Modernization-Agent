@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+  DELIBERATELY LEGACY. See README.md in this directory.
+
+  Ant, 2006-style. No dependency management of any kind: the classpath is whatever
+  happens to be sitting in lib/. Do not fix this file.
+-->
+<project name="AcmePayroll" default="war" basedir=".">
+
+    <!-- Hardcoded developer machine paths. These are why the build only runs on one box. -->
+    <property name="jboss.home" value="C:/jboss-4.0.5.GA"/>
+    <property name="jdk.home" value="C:/j2sdk1.4.2_19"/>
+    <property name="deploy.dir" value="${jboss.home}/server/default/deploy"/>
+
+    <property name="src.dir" value="src"/>
+    <property name="test.dir" value="test"/>
+    <property name="web.dir" value="web"/>
+    <property name="conf.dir" value="conf"/>
+    <property name="lib.dir" value="lib"/>
+    <property name="build.dir" value="build"/>
+    <property name="classes.dir" value="${build.dir}/classes"/>
+    <property name="dist.dir" value="dist"/>
+
+    <!--
+      Source and target 1.4: no generics, no enhanced for, no annotations. The whole
+      codebase is written to this constraint.
+    -->
+    <property name="javac.source" value="1.4"/>
+    <property name="javac.target" value="1.4"/>
+
+    <path id="compile.classpath">
+        <!-- Unversioned wildcard: nobody knows which jar supplies which class. -->
+        <fileset dir="${lib.dir}">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${jboss.home}/client">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+
+    <target name="init">
+        <mkdir dir="${classes.dir}"/>
+        <mkdir dir="${dist.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <!--
+          debug="off" in the only build anyone runs, so production stack traces have
+          no line numbers. deprecation and warnings are switched off too.
+        -->
+        <javac srcdir="${src.dir}"
+               destdir="${classes.dir}"
+               source="${javac.source}"
+               target="${javac.target}"
+               debug="off"
+               deprecation="off"
+               nowarn="true"
+               encoding="ISO-8859-1"
+               includeantruntime="false">
+            <classpath refid="compile.classpath"/>
+        </javac>
+        <copy todir="${classes.dir}">
+            <fileset dir="${conf.dir}">
+                <include name="**/*.properties"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!--
+      The test target is not in the default target's dependency chain, and has been
+      commented out of the nightly build since 2011.
+    -->
+    <target name="test" depends="compile">
+        <mkdir dir="${build.dir}/test-classes"/>
+        <javac srcdir="${test.dir}"
+               destdir="${build.dir}/test-classes"
+               source="${javac.source}"
+               target="${javac.target}"
+               includeantruntime="false">
+            <classpath refid="compile.classpath"/>
+        </javac>
+        <junit printsummary="yes" haltonfailure="no" failureproperty="tests.failed">
+            <classpath>
+                <pathelement location="${classes.dir}"/>
+                <pathelement location="${build.dir}/test-classes"/>
+                <path refid="compile.classpath"/>
+            </classpath>
+            <batchtest>
+                <fileset dir="${test.dir}" includes="**/*Test.java"/>
+            </batchtest>
+        </junit>
+        <!-- haltonfailure="no" and nothing checks tests.failed: the build is green regardless. -->
+    </target>
+
+    <target name="ejb-jar" depends="compile">
+        <jar destfile="${dist.dir}/payroll-ejb.jar">
+            <fileset dir="${classes.dir}">
+                <include name="com/acme/payroll/ejb/**"/>
+                <include name="com/acme/payroll/dao/**"/>
+            </fileset>
+            <metainf dir="${web.dir}/WEB-INF">
+                <include name="ejb-jar.xml"/>
+                <include name="jboss.xml"/>
+            </metainf>
+        </jar>
+    </target>
+
+    <target name="war" depends="ejb-jar">
+        <war destfile="${dist.dir}/payroll.war" webxml="${web.dir}/WEB-INF/web.xml">
+            <fileset dir="${web.dir}">
+                <exclude name="WEB-INF/web.xml"/>
+            </fileset>
+            <classes dir="${classes.dir}"/>
+            <lib dir="${lib.dir}">
+                <include name="**/*.jar"/>
+            </lib>
+        </war>
+    </target>
+
+    <!-- Deploys by copying onto a running server. No versioning, no rollback. -->
+    <target name="deploy" depends="war">
+        <copy file="${dist.dir}/payroll.war" todir="${deploy.dir}"/>
+        <copy file="${dist.dir}/payroll-ejb.jar" todir="${deploy.dir}"/>
+    </target>
+
+</project>
